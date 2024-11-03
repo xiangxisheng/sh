@@ -51,7 +51,7 @@ SERVER_PUBLIC_KEY=$(echo "$SERVER_PRIVATE_KEY" | wg pubkey)
 cat > $WG_CONF <<EOF
 [Interface]
 PrivateKey = $SERVER_PRIVATE_KEY
-Address = $SERVER_IP/24
+Address = $SERVER_IP/32
 ListenPort = $SERVER_PORT
 # DNS = $DNS_SERVERS
 PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -j MASQUERADE
@@ -85,7 +85,7 @@ EOF
     cat > $PEER_CONF <<EOF
 [Interface]
 PrivateKey = $PEER_PRIVATE_KEY
-Address = $PEER_IP/24
+Address = $PEER_IP/32
 DNS = $DNS_SERVERS
 
 [Peer]
