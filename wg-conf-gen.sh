@@ -17,7 +17,7 @@ int_to_ip() {
 # Check if the correct number of arguments are provided
 if [ "$#" -ne 6 ]; then
     echo "Usage: $0 <Name> <Server Port> <Server IP> <Starting Peer IP> <Number of Peers> <AllowedIPs of Peers>"
-    echo "Example: $0 wg1 18201 10.182.255.0 10.182.255.1 250 10.182.255.0/24"
+    echo "Example: $0 wg1 18201 10.182.255.254 10.182.255.1 250 10.182.255.0/24"
     exit 1
 fi
 
@@ -51,9 +51,12 @@ SERVER_PUBLIC_KEY=$(echo "$SERVER_PRIVATE_KEY" | wg pubkey)
 cat > $WG_CONF <<EOF
 [Interface]
 PrivateKey = $SERVER_PRIVATE_KEY
-Address = $SERVER_IP/32
+Address = $SERVER_IP/24
 ListenPort = $SERVER_PORT
-DNS = $DNS_SERVERS
+# DNS = $DNS_SERVERS
+PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -s 10.0.0.0/8 -j MASQUERADE
+
 EOF
 
 # Convert starting IP to an integer
@@ -82,7 +85,7 @@ EOF
     cat > $PEER_CONF <<EOF
 [Interface]
 PrivateKey = $PEER_PRIVATE_KEY
-Address = $PEER_IP/32
+Address = $PEER_IP/24
 DNS = $DNS_SERVERS
 
 [Peer]
