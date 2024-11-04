@@ -65,7 +65,7 @@ EOF
 STARTING_IP_INT=$(ip_to_int "$STARTING_PEER_IP")
 
 # Generate configurations for the specified number of Peers
-for ((i=0; i<PEER_COUNT; i=i+PEER_IP_STEP)); do
+for ((i=0; i<PEER_COUNT*PEER_IP_STEP; i=i+PEER_IP_STEP)); do
     PEER_PRIVATE_KEY=$(wg genkey)
     PEER_PUBLIC_KEY=$(echo "$PEER_PRIVATE_KEY" | wg pubkey)
 
