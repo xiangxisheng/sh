@@ -15,7 +15,7 @@ int_to_ip() {
 }
 
 # Check if the correct number of arguments are provided
-if [ "$#" -ne 6 ]; then
+if [ "$#" -ne 8 ]; then
     echo "Usage: $0 <Name> <Server Port> <Server IP> <Starting Peer IP> <netmask> <step> <Number of Peers> <AllowedIPs of Peers>"
     echo "Example: $0 wg1 18201 10.182.255.254/24 10.182.255.0 28 16 16 10.182.255.0/24"
     exit 1
