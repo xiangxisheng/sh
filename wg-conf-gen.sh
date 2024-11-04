@@ -16,8 +16,8 @@ int_to_ip() {
 
 # Check if the correct number of arguments are provided
 if [ "$#" -ne 6 ]; then
-    echo "Usage: $0 <Name> <Server Port> <Server IP> <Starting Peer IP> <Number of Peers> <AllowedIPs of Peers>"
-    echo "Example: $0 wg1 18201 10.182.255.254 10.182.255.1 250 10.182.255.0/24"
+    echo "Usage: $0 <Name> <Server Port> <Server IP> <Starting Peer IP> <netmask> <step> <Number of Peers> <AllowedIPs of Peers>"
+    echo "Example: $0 wg1 18201 10.182.255.254/24 10.182.255.0 28 16 16 10.182.255.0/24"
     exit 1
 fi
 
@@ -27,8 +27,10 @@ WG_CONF="${CONF_DIR}/${1}.conf"   # Server configuration file path
 SERVER_PORT=$2                    # Server listening port
 SERVER_IP=$3                      # Server IP address
 STARTING_PEER_IP=$4               # Starting Peer IP address
-PEER_COUNT=$5                     # Number of Peers
-PeerAllowedIPs=$6                 # AllowedIPs of Peers
+PEER_IP_NETMASK=$5
+PEER_IP_STEP=$6
+PEER_COUNT=$7                     # Number of Peers
+PeerAllowedIPs=$8                 # AllowedIPs of Peers
 DNS_SERVERS="8.8.4.4, 8.8.8.8"    # Default DNS servers
 
 # Fetch the public IP address of the server
@@ -51,11 +53,11 @@ SERVER_PUBLIC_KEY=$(echo "$SERVER_PRIVATE_KEY" | wg pubkey)
 cat > $WG_CONF <<EOF
 [Interface]
 PrivateKey = $SERVER_PRIVATE_KEY
-Address = $SERVER_IP/32
+Address = $SERVER_IP
 ListenPort = $SERVER_PORT
 # DNS = $DNS_SERVERS
-PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -j MASQUERADE
-PostDown = iptables -t nat -D POSTROUTING -s 10.0.0.0/8 -j MASQUERADE
+# PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -j MASQUERADE
+# PostDown = iptables -t nat -D POSTROUTING -s 10.0.0.0/8 -j MASQUERADE
 
 EOF
 
@@ -63,7 +65,7 @@ EOF
 STARTING_IP_INT=$(ip_to_int "$STARTING_PEER_IP")
 
 # Generate configurations for the specified number of Peers
-for ((i=0; i<PEER_COUNT; i++)); do
+for ((i=0; i<PEER_COUNT; i=i+PEER_IP_STEP)); do
     PEER_PRIVATE_KEY=$(wg genkey)
     PEER_PUBLIC_KEY=$(echo "$PEER_PRIVATE_KEY" | wg pubkey)
 
@@ -77,7 +79,7 @@ for ((i=0; i<PEER_COUNT; i++)); do
 [Peer]
 # Peer $((i + 1)) configuration
 PublicKey = $PEER_PUBLIC_KEY
-AllowedIPs = $PEER_IP/32
+AllowedIPs = $PEER_IP/$PEER_IP_NETMASK
 EOF
 
     # Create individual configuration file for each Peer with the naming convention
